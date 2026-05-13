@@ -72,8 +72,8 @@
   /* grid */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
     max-width: 1100px;
     margin: 0 auto 32px;
   }
@@ -359,6 +359,15 @@
     .form-row { flex-direction: column; gap: 16px; }
     .modal { padding: 20px; }
     .header-btns { flex-wrap: wrap; justify-content: center; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .card { padding: 14px; }
+    .card-title { font-size: .88rem; }
+    .card-desc { font-size: .72rem; }
+    .emoji { font-size: 1.2rem; }
+    .check-btn { font-size: .78rem; padding: 8px; }
+    .progress-label { font-size: .7rem; }
+    .badge { font-size: .62rem; padding: 2px 6px; }
+    .milestone-title { font-size: .65rem; }
   }
 </style>
 </head>
