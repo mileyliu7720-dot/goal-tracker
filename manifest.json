@@ -2,7 +2,7 @@
   "name": "Miley 习惯追踪",
   "short_name": "习惯看板",
   "description": "Miley 的个人习惯追踪看板 — 打卡、里程碑、数据可视化",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f0f17",
   "theme_color": "#7c6af7",
