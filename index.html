@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="习惯看板">
 <meta name="theme-color" content="#7c6af7">
-<title>Miley 习惯追踪看板</title>
-<link rel="manifest" href="manifest.json?v=2">
+<title>习惯追踪看板</title>
+<link rel="manifest" href="manifest.json?v=3">
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
   :root {
@@ -57,15 +57,17 @@
   }
   .streak-chip .num { color: var(--accent); font-weight: 700; font-size: .95rem; }
 
-  /* add button */
-  .add-btn {
+  /* header buttons row */
+  .header-btns { display: flex; gap: 8px; }
+  .add-btn, .settings-btn {
     display: inline-flex; align-items: center; gap: 6px;
-    background: var(--accent); color: #fff; border: none;
-    padding: 8px 20px; border-radius: 30px; font-size: .85rem;
+    border: none; border-radius: 30px; font-size: .85rem;
     font-weight: 600; cursor: pointer; transition: opacity .2s;
-    font-family: inherit;
+    font-family: inherit; padding: 8px 20px;
   }
-  .add-btn:hover { opacity: .85; }
+  .add-btn { background: var(--accent); color: #fff; }
+  .settings-btn { background: #2a2a3a; color: var(--muted); border: 1px solid var(--border); }
+  .add-btn:hover, .settings-btn:hover { opacity: .85; }
 
   /* grid */
   .grid {
@@ -191,6 +193,7 @@
 
   /* footer */
   .footer { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 24px; }
+  .footer a { color: var(--accent); text-decoration: none; }
 
   /* toast */
   .toast {
@@ -312,12 +315,50 @@
   .confirm-text { color: var(--muted); font-size: .9rem; margin-bottom: 6px; line-height: 1.5; }
   .confirm-name { color: var(--text); font-weight: 600; }
 
+  /* settings panel */
+  .settings-section {
+    margin-bottom: 20px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .settings-section:last-of-type { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .settings-section h4 { font-size: .85rem; font-weight: 600; margin-bottom: 10px; }
+  .settings-hint { font-size: .78rem; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+  .feedback-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--accent); text-decoration: none; font-size: .9rem;
+    margin-top: 8px; padding: 10px 18px;
+    border: 1px solid var(--accent); border-radius: 10px;
+    transition: all .2s;
+  }
+  .feedback-link:hover { background: rgba(124,106,247,.15); }
+
+  /* welcome overlay */
+  .welcome-overlay {
+    display: none;
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,.85); z-index: 2000;
+    align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .welcome-overlay.open { display: flex; }
+  .welcome-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 32px 28px;
+    width: 100%; max-width: 400px; text-align: center;
+  }
+  .welcome-card .welcome-emoji { font-size: 3rem; margin-bottom: 12px; }
+  .welcome-card h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+  .welcome-card p { color: var(--muted); font-size: .9rem; margin-bottom: 24px; line-height: 1.5; }
+  .welcome-card .form-input { text-align: center; font-size: 1.1rem; margin-bottom: 20px; }
+
   /* mobile adjustments */
   @media (max-width: 600px) {
     .header h1 { font-size: 1.4rem; }
     .card-actions { opacity: 1; }
     .form-row { flex-direction: column; gap: 16px; }
     .modal { padding: 20px; }
+    .header-btns { flex-wrap: wrap; justify-content: center; }
   }
 </style>
 </head>
@@ -325,11 +366,14 @@
 
 <div class="header">
   <div class="header-top">
-    <h1>Miley 的 <span>习惯看板</span></h1>
-    <button class="add-btn" onclick="openAddModal()">+ 新习惯</button>
+    <h1 id="header-title">的 <span>习惯看板</span></h1>
   </div>
   <div class="date" id="today-date"></div>
   <div class="streak-row" id="streak-row"></div>
+  <div class="header-btns">
+    <button class="add-btn" onclick="openAddModal()">+ 新习惯</button>
+    <button class="settings-btn" onclick="openSettingsModal()">⚙️ 设置</button>
+  </div>
 </div>
 
 <div class="grid" id="habits-grid"></div>
@@ -344,8 +388,24 @@
   <div id="week-report-body"></div>
 </div>
 
-<div class="footer">WorkBuddy × Miley Goal Tracker · 从 2026-05-13 起</div>
+<div class="footer">
+  习惯追踪看板 · 数据保存在你的浏览器中<br>
+  有建议？<a href="mailto:2597386945@qq.com?subject=习惯看板反馈">📧 给我发邮件</a>
+</div>
 <div class="toast" id="toast"></div>
+
+<!-- ─── Welcome (First Launch) ─────────────────── -->
+<div class="welcome-overlay" id="welcome">
+  <div class="welcome-card">
+    <div class="welcome-emoji">👋</div>
+    <h2>欢迎来到习惯看板</h2>
+    <p>先告诉我你的名字，这样标题就会变成你的专属看板~</p>
+    <input class="form-input" id="welcome-name" placeholder="输入你的昵称" maxlength="12" autofocus>
+    <div class="modal-btns">
+      <button class="modal-btn primary" onclick="saveWelcomeName()">开始使用 🚀</button>
+    </div>
+  </div>
+</div>
 
 <!-- ─── Add / Edit Modal ──────────────────────────── -->
 <div class="modal-overlay" id="modal">
@@ -403,11 +463,41 @@
   </div>
 </div>
 
+<!-- ─── Settings Modal ──────────────────────────── -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">⚙️ 设置</div>
+
+    <div class="settings-section">
+      <h4>👤 我的昵称</h4>
+      <input class="form-input" id="settings-name" placeholder="输入昵称" maxlength="12">
+      <div class="settings-hint">修改后标题会立即更新，最多 12 个字</div>
+    </div>
+
+    <div class="settings-section">
+      <h4>💬 意见反馈</h4>
+      <p class="settings-hint">有任何建议、Bug 或想法，欢迎邮件联系~</p>
+      <a class="feedback-link" href="mailto:2597386945@qq.com?subject=习惯看板反馈">📧 2597386945@qq.com</a>
+    </div>
+
+    <div class="settings-section">
+      <h4>📱 添加到桌面</h4>
+      <div class="settings-hint">在 Safari 中打开此页面，点击底部分享按钮 → 「添加到主屏幕」，就能像 App 一样使用啦！</div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeSettings()">关闭</button>
+      <button class="modal-btn primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── 常量 ──────────────────────────────────────────────
-const GOALS_KEY  = 'gt_goals';
-const LOG_KEY    = 'gt_logs';
-const DAY_NAMES  = ['日','一','二','三','四','五','六'];
+const GOALS_KEY    = 'gt_goals';
+const LOG_KEY      = 'gt_logs';
+const USER_KEY     = 'gt_user';
+const DAY_NAMES    = ['日','一','二','三','四','五','六'];
 const EMOJIS = [
   '🌙','🛌','🧴','📝','💪','🏃','📚','🎯','💡','💧',
   '🧘','🎨','🎵','🌿','🍳','💻','📱','🔋','❤️','⭐',
@@ -424,7 +514,7 @@ const PRESETS = [
 
 // ─── 默认数据 ─────────────────────────────────────────
 const DEFAULT_GOALS = {
-  meta: { name: "Miley 个人习惯追踪", start_date: "2026-05-13", version: "1.1" },
+  meta: { name: "个人习惯追踪", start_date: "2026-05-13", version: "1.2" },
   habits: [
     {
       id: "sleep_weekday", name: "工作日作息", description: "23:00 睡觉 / 7:30 起床",
@@ -473,6 +563,19 @@ const DEFAULT_GOALS = {
   ]
 };
 
+// ─── 用户数据 ──────────────────────────────────────────
+function loadUser() {
+  try {
+    const u = JSON.parse(localStorage.getItem(USER_KEY));
+    return u || null;
+  } catch { return null; }
+}
+function saveUser(u) { localStorage.setItem(USER_KEY, JSON.stringify(u)); }
+function getNickname() {
+  const u = loadUser();
+  return (u && u.nickname) ? u.nickname : '';
+}
+
 // ─── 数据操作 ──────────────────────────────────────────
 function today() {
   const d = new Date();
@@ -483,7 +586,6 @@ function uid() { return 'h_' + Date.now().toString(36) + '_' + Math.random().toS
 function loadGoals() {
   try {
     const g = JSON.parse(localStorage.getItem(GOALS_KEY));
-    // migration: add milestones if missing
     if (g) g.habits.forEach(h => { if (!h.milestones) h.milestones = [{label:"完成 1 次",threshold:1,done:false}]; });
     return g || DEFAULT_GOALS;
   } catch { return DEFAULT_GOALS; }
@@ -561,8 +663,49 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
+// ─── Welcome (First Launch) ─────────────────────────
+function checkWelcome() {
+  const u = loadUser();
+  if (!u || !u.nickname) {
+    document.getElementById('welcome').classList.add('open');
+    setTimeout(() => document.getElementById('welcome-name').focus(), 300);
+  }
+}
+function saveWelcomeName() {
+  const name = document.getElementById('welcome-name').value.trim();
+  if (!name) { showToast('请输入一个昵称'); return; }
+  saveUser({ nickname: name, setup: true });
+  document.getElementById('welcome').classList.remove('open');
+  showToast(`👋 欢迎 ${name}！`);
+  render();
+}
+// Enter key for welcome
+document.getElementById('welcome-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveWelcomeName();
+});
+
+// ─── Settings Modal ────────────────────────────────
+function openSettingsModal() {
+  document.getElementById('settings-name').value = getNickname();
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+function saveSettings() {
+  const name = document.getElementById('settings-name').value.trim();
+  if (!name) { showToast('昵称不能为空'); return; }
+  saveUser({ nickname: name, setup: true });
+  closeSettings();
+  showToast('✅ 设置已保存');
+  render();
+}
+document.getElementById('settings-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeSettings();
+});
+
 // ─── Modal 状态 ────────────────────────────────────────
-let editingId = null;   // null = 新增, string = 编辑
+let editingId = null;
 let selectedEmoji = '🎯';
 let selectedDays = [0,1,2,3,4,5,6];
 
@@ -589,7 +732,6 @@ function applyPreset(idx) {
     selectedDays = [...p.days];
     buildDayPicker();
   }
-  // highlight active preset
   document.querySelectorAll('.preset-btn').forEach((btn, i) => {
     btn.classList.toggle('active', i === idx);
   });
@@ -606,9 +748,7 @@ function toggleDay(d) {
   if (idx > -1) selectedDays.splice(idx, 1); else selectedDays.push(d);
   selectedDays.sort();
   buildDayPicker();
-  // deselect presets
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
-  // check if matches a preset
   PRESETS.forEach((p, i) => {
     if (p.days && p.days.length === selectedDays.length && p.days.every((d,j) => d === selectedDays[j])) {
       document.querySelectorAll('.preset-btn')[i].classList.add('active');
@@ -705,19 +845,16 @@ function saveHabit() {
   const goals = loadGoals();
 
   if (editingId) {
-    // edit
     const h = goals.habits.find(x => x.id === editingId);
     if (!h) return;
     h.name = name;
     h.description = desc || name;
     h.emoji = selectedEmoji;
     h.days = selectedDays;
-    // update milestones: keep done status for existing ones
     h.milestones.forEach(m => {
       const match = milestones.find(nm => nm.label === m.label && nm.threshold === m.threshold);
-      if (!match) m.done = false; // reset if removed
+      if (!match) m.done = false;
     });
-    // add new milestones
     milestones.forEach(nm => {
       if (!h.milestones.find(m => m.label === nm.label && m.threshold === nm.threshold)) {
         h.milestones.push(nm);
@@ -725,7 +862,6 @@ function saveHabit() {
     });
     showToast('✅ 习惯已更新');
   } else {
-    // add
     goals.habits.push({
       id: uid(),
       name,
@@ -765,7 +901,6 @@ function deleteHabit() {
   const goals = loadGoals();
   goals.habits = goals.habits.filter(h => h.id !== deletingId);
   saveGoals(goals);
-  // also clean logs
   const logData = loadLogs();
   logData.logs.forEach(l => { if (l.checks) delete l.checks[deletingId]; });
   saveLogs(logData);
@@ -779,6 +914,14 @@ function render() {
   const goals = loadGoals();
   const logData = loadLogs();
   const logs = logData.logs;
+  const nickname = getNickname();
+
+  // Update page title
+  document.title = nickname ? `${nickname} 的习惯追踪看板` : '习惯追踪看板';
+
+  // Update header
+  const headerEl = document.getElementById('header-title');
+  headerEl.innerHTML = nickname ? `${nickname} 的 <span>习惯看板</span>` : '<span>习惯看板</span>';
 
   // 日期
   const now = new Date();
@@ -896,6 +1039,7 @@ document.getElementById('confirm-modal').addEventListener('click', e => {
 });
 
 // ─── Init ─────────────────────────────────────────────
+checkWelcome();
 render();
 </script>
 </body>
